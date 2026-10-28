@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [Debug, Release]
+        shared: [OFF, ON]
+    name: ${{ matrix.config }} (shared=${{ matrix.shared }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -A x64 -DREVENANT_SHARED=${{ matrix.shared }} -DREVENANT_BUILD_DEMO=ON
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.config }} --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.config }} --output-on-failure
+
+      - name: Install
+        run: cmake --install build --config ${{ matrix.config }} --prefix install
