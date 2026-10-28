@@ -1,0 +1,27 @@
+# build directories
+build/
+build-*/
+out/
+cmake-build-*/
+x64/
+Debug/
+Release/
+
+# object/compiler artifacts
+*.obj
+*.pdb
+*.ilk
+*.lib
+*.exp
+*.idb
+*.log
+
+# ida / re working files
+*.i64
+*.idb
+*.asm
+
+# editor
+.vs/
+.vscode/
+.idea/
