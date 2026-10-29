@@ -62,7 +62,8 @@ All functions return a `[[nodiscard]] revenant::Status`; `revenant::ToString` gi
 ### Chaining
 
 Creating a second `Inline` hook on the same target chains it: the new detour runs first and its `original` is the
-previous detour. Only the relay pointer is swapped; the target is not repatched.
+previous detour. Only the relay pointer is swapped; the target is not repatched. `Remove` pops the most recent
+detour, so chained hooks (including scoped `Hook<Fn>` objects) must be removed newest-first.
 
 ### VTable hooks
 

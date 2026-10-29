@@ -78,7 +78,8 @@ enum class Kind : std::uint8_t {
 
 // Kind::VTable takes the slot address (see VTableSlot). A second Inline hook on
 // the same target is chained: the new detour runs first and receives the
-// previous detour as its original.
+// previous detour as its original. Remove pops the most recent detour from the
+// chain, so chained hooks must be removed newest-first.
 [[nodiscard]] REVENANT_API Status Create(void* target, void* detour, void** original,
                                          Kind kind = Kind::Inline) noexcept;
 

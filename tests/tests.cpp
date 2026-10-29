@@ -140,7 +140,11 @@ void TestChain() {
     // (3*4*10)+1
     CHECK(Mul(3, 4) == 121);
     CHECK(Create(&Mul, &ChainB, &b, Kind::Breakpoint) == Status::AlreadyHooked);
-    CHECK_OK(Remove(&Mul));
+    CHECK_OK(Remove(&Mul));          // pops ChainB, ChainA stays
+    CHECK(IsHooked(&Mul));
+    CHECK(Mul(3, 4) == 120);
+    CHECK_OK(Remove(&Mul));          // pops ChainA, fully unhooked
+    CHECK(!IsHooked(&Mul));
     CHECK(Mul(3, 4) == 12);
 }
 

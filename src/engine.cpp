@@ -460,6 +460,15 @@ Status Remove(void* target) noexcept {
         if (s.batch) return Status::BatchActive;
         Record* r = Find(s, target);
         if (!r) return Status::NotHooked;
+        if (r->kind == Kind::Inline && r->chain.size() > 1) {   // chained: drop the newest detour only
+            void* top = r->chain.back();
+            r->chain.pop_back();
+            if (!UpdateRelay(*r)) {
+                r->chain.push_back(top);
+                return Status::AccessDenied;
+            }
+            return Status::Ok;
+        }
         return RemoveRecords(s, { r });
     } catch (...) {
         return Status::InvalidParameter;
