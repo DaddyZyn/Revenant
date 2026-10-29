@@ -19,13 +19,12 @@ size_t OpcodeOffset(const uint8_t* p, size_t len) {
     while (i < len) {
         const uint8_t b = p[i];
         if (b == 0xF0 || b == 0xF2 || b == 0xF3 || b == 0x2E || b == 0x36 || b == 0x3E ||
-            b == 0x26 || b == 0x64 || b == 0x65 || b == 0x66 || b == 0x67) {
+            b == 0x26 || b == 0x64 || b == 0x65 || b == 0x66 || b == 0x67 || (b & 0xF0) == 0x40) {
             ++i;
             continue;
         }
         break;
     }
-    if (i < len && (p[i] & 0xF0) == 0x40) ++i;
     return i;
 }
 
@@ -183,6 +182,11 @@ Status BuildTrampoline(SlotAllocator& slots, uint8_t* target, void* detour, size
     }
 
     if (st == Status::Ok && !terminated) {
+        if (r.ipCount < kMaxInsns) {              // record the boundary after the prologue so a
+            r.ipSrc[r.ipCount] = static_cast<uint8_t>(in);   // thread paused on the trailing jump-back
+            r.ipDst[r.ipCount] = static_cast<uint8_t>(out);  // migrates to target+in before the slot is freed
+            ++r.ipCount;
+        }
         uint8_t* back = target + in;
         const int64_t rel = Rel32(codeBase + out, 5, back);
         if (FitsRel32(rel)) {
