@@ -19,7 +19,6 @@ enum : uint8_t {
 
 uint8_t tbl_primary[256];
 uint8_t tbl_0f[256];
-bool tables_ready = false;
 
 void InitTables() {
     memset(tbl_primary, 0, sizeof(tbl_primary));
@@ -141,7 +140,8 @@ bool DecodeModrm(const uint8_t* p, uint32_t& pos, uint32_t& flags, rvlde_insn* o
 } // namespace
 
 uint32_t rvlde_decode(const uint8_t* p, rvlde_insn* out) {
-    if (!tables_ready) { InitTables(); tables_ready = true; }
+    static const bool ready = (InitTables(), true);
+    (void)ready;
     if (out) { out->length = 0; out->flags = 0; out->relTarget = 0; out->dispOffset = 0; }
 
     uint32_t flags = 0;
@@ -215,11 +215,7 @@ uint32_t rvlde_decode(const uint8_t* p, rvlde_insn* out) {
             if (op2 >= 0x20 && op2 <= 0x23) { iflags = 0; pos++; flags |= RVF_MODRM; }   // mov cr/dr: mod ignored, always reg form
         } else {
             uint32_t t = tbl_primary[op];
-            if (t & T_ESC_0F) {
-                uint8_t op2 = p[pos++];
-                iflags = tbl_0f[op2];
-                if (op2 >= 0x80 && op2 <= 0x8F) flags |= RVF_JCC;
-            } else if (op >= 0xB8 && op <= 0xBF) {
+            if (op >= 0xB8 && op <= 0xBF) {
                 iflags = rexW ? T_IMM64 : (osz ? T_IMM16 : T_IMM32);
             } else if (op >= 0xA0 && op <= 0xA3) {
                 iflags = asz ? T_IMM32 : T_IMM64; osz = false;   // moffs size follows 67 only
