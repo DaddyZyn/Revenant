@@ -7,14 +7,25 @@ namespace revenant::detail {
 BreakpointSlot   g_bp[4];
 std::atomic<int> g_bpActive{ 0 };
 
+namespace {
+DWORD64& DrReg(CONTEXT& ctx, int index) {
+    switch (index) {
+    case 0:  return ctx.Dr0;
+    case 1:  return ctx.Dr1;
+    case 2:  return ctx.Dr2;
+    default: return ctx.Dr3;
+    }
+}
+} // namespace
+
 void ApplyDr(CONTEXT& ctx, int index, void* address, bool enable) {
     const DWORD64 enableBit = 1ULL << (index * 2);
     const DWORD64 condMask = 0xFULL << (16 + index * 4);   // RW=00 LEN=00: execute
     if (enable) {
-        (&ctx.Dr0)[index] = reinterpret_cast<DWORD64>(address);
+        DrReg(ctx, index) = reinterpret_cast<DWORD64>(address);
         ctx.Dr7 = (ctx.Dr7 & ~condMask) | enableBit;
     } else {
-        (&ctx.Dr0)[index] = 0;
+        DrReg(ctx, index) = 0;
         ctx.Dr7 &= ~(enableBit | condMask);
     }
 }
